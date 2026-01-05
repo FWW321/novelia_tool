@@ -1,39 +1,34 @@
-import { createStore } from 'solid-js/store';
-import { config } from './configStore';
+import { createPersistedStore } from '../utils/storeUtils';
+import { STORAGE_KEYS } from '../constants';
+import { config } from './configState';
 
-const KEEP_STATE_KEY = 'NTR_KeepState';
+const [keepActiveSet, setKeepActiveSet] = createPersistedStore<Record<string, boolean>>(
+  {}, 
+  { key: STORAGE_KEYS.KeepState }
+);
 
-const [keepActiveSet, setKeepActiveSet] = createStore<Record<string, boolean>>({});
-
-export const loadKeepState = () => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(KEEP_STATE_KEY) || '{}');
-    setKeepActiveSet(saved);
-  } catch (e) {}
-  startPolling();
+export const toggleKeepModule = (moduleId: string) => {
+  setKeepActiveSet(moduleId, (prev) => !prev);
 };
 
-export const toggleKeepModule = (moduleName: string) => {
-  setKeepActiveSet(moduleName, (prev) => !prev);
-  const newState = { ...keepActiveSet };
-  localStorage.setItem(KEEP_STATE_KEY, JSON.stringify(newState));
-};
-
-export const isModuleActive = (moduleName: string) => !!keepActiveSet[moduleName];
+export const isModuleActive = (moduleId: string) => !!keepActiveSet[moduleId];
 
 let pollInterval: number | null = null;
 
 const startPolling = () => {
   if (pollInterval) return;
   pollInterval = window.setInterval(() => {
-    Object.keys(keepActiveSet).forEach((name) => {
-      if (keepActiveSet[name]) {
-        const mod = config.modules.find((m) => m.name === name);
+    Object.keys(keepActiveSet).forEach((id) => {
+      if (keepActiveSet[id]) {
+        const mod = config.modules.find((m) => m.id === id);
         if (mod && mod.run) {
-          // We pass the current config from the store
           mod.run(mod);
         }
       }
     });
   }, 100);
 };
+
+startPolling();
+
+export { keepActiveSet };

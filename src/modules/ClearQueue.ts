@@ -1,13 +1,15 @@
 import { ModuleDefinition } from '../types';
 import StorageService from '../services/StorageService';
 import { NotificationService } from '../store/notificationStore';
+import { ModuleId, SettingId } from '../constants';
 
 const ClearQueue: ModuleDefinition = {
-  name: '清空任务队列',
+  id: ModuleId.ClearQueue,
+  label: '清空任务队列',
   type: 'onclick',
   whitelist: '/workspace',
   settings: [
-    { name: 'bind', type: 'keybind', value: 'none' },
+    { id: SettingId.Bind, label: 'bind', type: 'keybind', value: 'none' },
   ],
   run: async () => {
     if (location.href.includes('gpt')) {

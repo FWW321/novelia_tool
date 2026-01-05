@@ -1,29 +1,33 @@
 import { ModuleDefinition } from '../types';
 import StorageService from '../services/StorageService';
 import { NotificationService } from '../store/notificationStore';
+import { ModuleId, SettingId } from '../constants';
 
 const AddGPTTranslator: ModuleDefinition = {
-  name: '添加GPT翻译器',
+  id: ModuleId.AddGPTTranslator,
+  label: '添加GPT翻译',
   type: 'onclick',
   whitelist: '/workspace/gpt',
   settings: [
-    { name: '数量', type: 'number', value: 5 },
-    { name: '名称', type: 'string', value: 'NTR translator ' },
-    { name: '模型', type: 'string', value: 'deepseek-chat' },
-    { name: '链接', type: 'string', value: 'https://api.deepseek.com' },
-    { name: 'Key', type: 'string', value: 'sk-wait-for-input' },
-    { name: 'bind', type: 'keybind', value: 'none' },
+    { id: SettingId.Count, label: '数量', type: 'number', value: 5 },
+    { id: SettingId.NamePrefix, label: '名称', type: 'string', value: 'NTR translator ' },
+    { id: SettingId.Model, label: '模型', type: 'string', value: 'deepseek-chat' },
+    { id: SettingId.Endpoint, label: '链接', type: 'string', value: 'https://api.deepseek.com' },
+    { id: SettingId.ApiKey, label: 'Key', type: 'string', value: 'sk-wait-for-input' },
+    { id: SettingId.Bind, label: 'bind', type: 'keybind', value: 'none' }
   ],
   run: async (cfg) => {
-    const totalCount = cfg.settings.find((s) => s.name === '数量')?.value || 1;
-    const namePrefix = cfg.settings.find((s) => s.name === '名称')?.value || '';
-    const model = cfg.settings.find((s) => s.name === '模型')?.value || '';
-    const apiKey = cfg.settings.find((s) => s.name === 'Key')?.value || '';
-    const apiUrl = cfg.settings.find((s) => s.name === '链接')?.value || '';
+    const val = (id: string) => cfg.settings.find((s) => s.id === id)?.value;
 
-    await StorageService.addGPTWorker(namePrefix, model, apiUrl, apiKey, totalCount);
-    NotificationService.showSuccess(`成功添加 ${totalCount} 个 GPT 翻译器`);
-  },
+    const count = val(SettingId.Count) || 1;
+    const name = val(SettingId.NamePrefix) || '';
+    const model = val(SettingId.Model) || '';
+    const endpoint = val(SettingId.Endpoint) || '';
+    const key = val(SettingId.ApiKey) || '';
+
+    await StorageService.addGPTWorker(name, model, endpoint, key, count);
+    NotificationService.showSuccess(`成功添加 ${count} 个 GPT 翻译器`);
+  }
 };
 
 export default AddGPTTranslator;

@@ -1,14 +1,16 @@
 export type SettingType = 'boolean' | 'number' | 'string' | 'select' | 'keybind';
 
 export interface ModuleSetting {
-  name: string;
+  id: string;
+  label: string;
   type: SettingType;
   value: any;
-  options?: string[]; // For select type
+  options?: string[];
 }
 
 export interface ModuleDefinition {
-  name: string;
+  id: string;
+  label: string;
   type: 'onclick' | 'keep';
   whitelist: string | string[];
   hidden?: boolean;

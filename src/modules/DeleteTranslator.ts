@@ -1,17 +1,19 @@
 import { ModuleDefinition } from '../types';
 import StorageService from '../services/StorageService';
 import { NotificationService } from '../store/notificationStore';
+import { ModuleId, SettingId } from '../constants';
 
 const DeleteTranslator: ModuleDefinition = {
-  name: '删除翻译器',
+  id: ModuleId.DeleteTranslator,
+  label: '删除翻译器',
   type: 'onclick',
   whitelist: '/workspace',
   settings: [
-    { name: '排除', type: 'string', value: '共享,本机,AutoDL' },
-    { name: 'bind', type: 'keybind', value: 'none' },
+    { id: SettingId.Exclude, label: '排除', type: 'string', value: '共享,本机,AutoDL' },
+    { id: SettingId.Bind, label: 'bind', type: 'keybind', value: 'none' },
   ],
   run: async (cfg) => {
-    const excludeStr = cfg.settings.find((s) => s.name === '排除')?.value || '';
+    const excludeStr = cfg.settings.find((s) => s.id === SettingId.Exclude)?.value || '';
     const excludeArr = excludeStr.split(',').filter((x: string) => x);
 
     if (location.href.endsWith('gpt')) {

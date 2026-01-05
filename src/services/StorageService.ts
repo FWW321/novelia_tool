@@ -9,6 +9,27 @@ class StorageService {
     return 'workspace-gpt';
   }
 
+  private static _cache: Map<string, StorageData> = new Map();
+
+  static {
+    if (typeof window !== 'undefined') {
+        // Listen for storage changes from other tabs to keep cache in sync
+        window.addEventListener('storage', (event) => {
+        if (event.key && (event.key === this.sakuraKey || event.key === this.gptKey)) {
+            if (event.newValue) {
+            try {
+                this._cache.set(event.key, JSON.parse(event.newValue));
+            } catch (e) {
+                console.error('Failed to sync storage cache', e);
+            }
+            } else {
+            this._cache.delete(event.key);
+            }
+        }
+        });
+    }
+  }
+
   public static async update(): Promise<void> {
     const storageKey = window.location.pathname.includes('workspace/sakura')
       ? this.sakuraKey
@@ -18,16 +39,26 @@ class StorageService {
 
     if (!storageKey) return;
 
-    const data = await this._getData(storageKey);
-    await this._setData(storageKey, data);
+    await this._getData(storageKey);
+
+    window.dispatchEvent(
+      new StorageEvent('storage', {
+        key: storageKey,
+        newValue: JSON.stringify(this._cache.get(storageKey)),
+        url: window.location.href,
+        storageArea: localStorage,
+      })
+    );
   }
 
   private static async _setData(key: string, data: StorageData): Promise<void> {
-    localStorage.setItem(key, JSON.stringify(data));
+    this._cache.set(key, data);
+    const json = JSON.stringify(data);
+    localStorage.setItem(key, json);
     window.dispatchEvent(
       new StorageEvent('storage', {
         key: key,
-        newValue: JSON.stringify(data),
+        newValue: json,
         url: window.location.href,
         storageArea: localStorage,
       })
@@ -35,11 +66,23 @@ class StorageService {
   }
 
   private static async _getData(key: string): Promise<StorageData> {
+    if (this._cache.has(key)) {
+      return this._cache.get(key)!;
+    }
+
     const raw = localStorage.getItem(key);
     if (raw) {
-      return JSON.parse(raw);
+      try {
+        const data = JSON.parse(raw);
+        this._cache.set(key, data);
+        return data;
+      } catch (e) {
+        console.error('Failed to parse storage data', e);
+      }
     }
-    return { workers: [], jobs: [], uncompletedJobs: [] };
+    const defaultData: StorageData = { workers: [], jobs: [], uncompletedJobs: [] };
+    this._cache.set(key, defaultData);
+    return defaultData;
   }
 
   public static async addSakuraWorker(
@@ -52,35 +95,23 @@ class StorageService {
     const total = amount ?? 1;
     let data = await this._getData(this.sakuraKey);
 
-    // Find the current maximum ID to ensure uniqueness
-    const maxId = data.workers.reduce((max, w) => {
-      const wId = typeof w.id === 'number' ? w.id : parseInt(w.id as string) || 0;
-      return wId > max ? wId : max;
-    }, 0);
-
-    const _dataInsert = (
-      wId: number,
-      wName: string,
-      wEndpoint: string,
-      wPrevSegLength: number,
-      wSegLength: number
-    ) => {
+    const _dataInsert = (id: string | number) => {
       const worker: WorkerData = {
-        id: wId,
-        name: wName,
-        endpoint: wEndpoint,
-        prevSegLength: wPrevSegLength,
-        segLength: wSegLength,
+        id,
+        endpoint,
+        prevSegLength,
+        segLength,
       };
-      // Always push as new because we generated a unique ID
-      data.workers.push(worker);
+      const idx = data.workers.findIndex((w) => w.id === id);
+      if (idx !== -1) data.workers[idx] = worker;
+      else data.workers.push(worker);
     };
 
-    if (total === 1) {
-      _dataInsert(maxId + 1, namePrefix, endpoint, prevSegLength, segLength);
+    if (total <= 1) {
+      _dataInsert(namePrefix);
     } else {
       for (let i = 1; i <= total; i++) {
-        _dataInsert(maxId + i, `${namePrefix} ${i}`, endpoint, prevSegLength, segLength);
+        _dataInsert(`${namePrefix}${i}`);
       }
     }
     await this._setData(this.sakuraKey, data);
@@ -96,36 +127,24 @@ class StorageService {
     const total = amount ?? 1;
     let data = await this._getData(this.gptKey);
 
-    // Find the current maximum ID to ensure uniqueness
-    const maxId = data.workers.reduce((max, w) => {
-      const wId = typeof w.id === 'number' ? w.id : parseInt(w.id as string) || 0;
-      return wId > max ? wId : max;
-    }, 0);
-
-    const _dataInsert = (
-      wId: number,
-      wName: string,
-      wModel: string,
-      wEndpoint: string,
-      wKey: string
-    ) => {
+    const _dataInsert = (id: string | number) => {
       const worker: WorkerData = {
-        id: wId,
-        name: wName,
+        id,
         type: 'api',
-        model: wModel,
-        endpoint: wEndpoint,
-        key: wKey,
+        model,
+        endpoint,
+        key,
       };
-      // Always push as new because we generated a unique ID
-      data.workers.push(worker);
+      const idx = data.workers.findIndex((w) => w.id === id);
+      if (idx !== -1) data.workers[idx] = worker;
+      else data.workers.push(worker);
     };
 
-    if (total === 1) {
-      _dataInsert(maxId + 1, namePrefix, model, endpoint, key);
+    if (total <= 1) {
+      _dataInsert(namePrefix);
     } else {
       for (let i = 1; i <= total; i++) {
-        _dataInsert(maxId + i, `${namePrefix} ${i}`, model, endpoint, key);
+        _dataInsert(`${namePrefix}${i}`);
       }
     }
     await this._setData(this.gptKey, data);

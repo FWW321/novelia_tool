@@ -21,7 +21,7 @@ const ModuleItem: Component<Props> = (props) => {
           props.module.run(props.module);
         }
       } else if (props.module.type === 'keep') {
-        toggleKeepModule(props.module.name);
+        toggleKeepModule(props.module.id);
       }
     }
   };
@@ -31,7 +31,7 @@ const ModuleItem: Component<Props> = (props) => {
     setShowSettings(!showSettings());
   };
 
-  const isActive = () => props.module.type === 'keep' && isModuleActive(props.module.name);
+  const isActive = () => props.module.type === 'keep' && isModuleActive(props.module.id);
 
   return (
     <div class={styles.container}>
@@ -40,7 +40,7 @@ const ModuleItem: Component<Props> = (props) => {
         onClick={handleClick}
         onContextMenu={handleContextMenu}
       >
-        <span>{props.module.name}</span>
+        <span>{props.module.label}</span>
         <span class={styles.icon}>
           {props.module.type === 'keep' ? '⇋' : '▶'}
         </span>
@@ -49,7 +49,7 @@ const ModuleItem: Component<Props> = (props) => {
         <div class={styles.settings}>
           <For each={props.module.settings}>
             {(setting) => (
-              <SettingField moduleName={props.module.name} setting={setting} />
+              <SettingField moduleId={props.module.id} setting={setting} />
             )}
           </For>
         </div>

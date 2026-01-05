@@ -4,7 +4,7 @@ import { updateModuleSetting } from '../store/configStore';
 import styles from './SettingField.module.css';
 
 interface Props {
-  moduleName: string;
+  moduleId: string;
   setting: ModuleSetting;
 }
 
@@ -15,9 +15,9 @@ const SettingField: Component<Props> = (props) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.key === 'Escape') {
-      updateModuleSetting(props.moduleName, props.setting.name, 'none');
+      updateModuleSetting(props.moduleId, props.setting.id, 'none');
     } else {
-      updateModuleSetting(props.moduleName, props.setting.name, e.key.toLowerCase());
+      updateModuleSetting(props.moduleId, props.setting.id, e.key.toLowerCase());
     }
     setIsBinding(false);
     document.removeEventListener('keydown', handleKeyBind, true);
@@ -30,13 +30,13 @@ const SettingField: Component<Props> = (props) => {
 
   return (
     <div class={styles.row}>
-      <label class={styles.label}>{props.setting.name}: </label>
+      <label class={styles.label}>{props.setting.label}: </label>
       <Switch fallback={<span style={{ color: '#999' }}>{String(props.setting.value)}</span>}>
         <Match when={props.setting.type === 'boolean'}>
           <input
             type="checkbox"
             checked={!!props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleName, props.setting.name, e.currentTarget.checked)}
+            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.checked)}
           />
         </Match>
         <Match when={props.setting.type === 'number'}>
@@ -44,7 +44,7 @@ const SettingField: Component<Props> = (props) => {
             type="number"
             class={styles.numberInput}
             value={props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleName, props.setting.name, Number(e.currentTarget.value) || 0)}
+            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, Number(e.currentTarget.value) || 0)}
           />
         </Match>
         <Match when={props.setting.type === 'string'}>
@@ -52,14 +52,14 @@ const SettingField: Component<Props> = (props) => {
              type="text"
              class={styles.textInput}
              value={props.setting.value}
-             onChange={(e) => updateModuleSetting(props.moduleName, props.setting.name, e.currentTarget.value)}
+             onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.value)}
            />
         </Match>
         <Match when={props.setting.type === 'select'}>
           <select
             class={styles.select}
             value={props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleName, props.setting.name, e.currentTarget.value)}
+            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.value)}
           >
             <For each={props.setting.options}>
               {(opt) => <option value={opt}>{opt}</option>}

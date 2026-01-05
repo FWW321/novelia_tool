@@ -1,64 +1,74 @@
 import { ModuleDefinition } from '../types';
-import { NotificationService } from '../store/notificationStore';
+import { ModuleId, SettingId } from '../constants';
 
 const LaunchTranslator: ModuleDefinition = {
-  name: '启动翻译器',
+  id: ModuleId.LaunchTranslator,
+  label: '启动翻译器',
   type: 'onclick',
   whitelist: '/workspace',
   settings: [
-    { name: '延迟间隔', type: 'number', value: 50 },
-    { name: '最多启动', type: 'number', value: 999 },
-    { name: '避免无效启动', type: 'boolean', value: true },
-    { name: '排除', type: 'string', value: '本机,AutoDL' },
-    { name: 'bind', type: 'keybind', value: 'none' },
+    { id: 'interval', label: '延迟间隔', type: 'number', value: 50 },
+    { id: 'max_launch', label: '最多启动', type: 'number', value: 999 },
+    { id: 'avoid_empty', label: '避免无效启动', type: 'boolean', value: true },
+    { id: SettingId.Exclude, label: '排除', type: 'string', value: '本机,AutoDL' },
+    { id: SettingId.Bind, label: 'bind', type: 'keybind', value: 'none' },
   ],
-  run: async (cfg, auto) => {
-    const intervalVal = cfg.settings.find((s) => s.name === '延迟间隔')?.value || 50;
-    const maxClick = cfg.settings.find((s) => s.name === '最多启动')?.value || 999;
-    const noEmptyLaunch = cfg.settings.find((s) => s.name === '避免无效启动')?.value;
-
-    const allBtns = Array.from(document.querySelectorAll('button')).filter((btn) => {
-      if (!auto && noEmptyLaunch) return true;
-      const listItem = btn.closest('.n-list-item');
-      if (listItem) {
-        const errorMessages = listItem.querySelectorAll('div');
-        return !Array.from(errorMessages).some((div) =>
-          div.textContent?.includes('TypeError: Failed to fetch')
-        );
-      }
-      return true;
-    });
-
-    const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-    let idx = 0,
-      clickCount = 0,
-      lastRunning = 0,
-      emptyCheck = 0;
-
-    async function nextClick() {
+    run: async (cfg, auto) => {
+      const val = (id: string) => cfg.settings.find((s) => s.id === id)?.value;
+      
+      const intervalVal = (cfg.settings.find(s => s.label === '延迟间隔')?.value as number) || 50;
+      const maxClick = (val('max_launch') as number) || 999;
+      const noEmptyLaunch = val('avoid_empty');
+      const excludeStr = (val(SettingId.Exclude) as string) || '';
+      const excludeArr = excludeStr.split(',').filter(x => x);
+  
+      const getRunningCount = () => Array.from(document.querySelectorAll('button')).filter(btn => btn.textContent?.includes('停止')).length;
+  
+      const allBtns = Array.from(document.querySelectorAll('button')).filter(btn => {
+        // Basic whitelist check for button context
+        const listItem = btn.closest('.n-list-item');
+        if (!listItem) return false;
+  
+        // Exclude check
+        const text = listItem.textContent || '';
+        if (excludeArr.some(ex => text.includes(ex))) return false;
+  
+        // If auto-retrying, we might want to avoid "broken" workers
+        if (noEmptyLaunch) {
+          const hasError = listItem.textContent?.includes('TypeError: Failed to fetch');
+          if (hasError) return false;
+        }
+  
+        return btn.textContent?.includes('启动');
+      });
+  
+      const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
+      
+      let idx = 0;
+      let clickCount = 0;
+      let lastRunning = getRunningCount();
+      let emptyCheck = 0;
+  
       while (idx < allBtns.length && clickCount < maxClick) {
         const btn = allBtns[idx++];
-        if (btn.textContent?.includes('启动')) {
-          btn.click();
-          clickCount++;
-          await delay(intervalVal);
-        }
+        btn.click();
+        clickCount++;
+        
+        await delay(intervalVal);
+  
         if (noEmptyLaunch) {
-          let running = Array.from(document.querySelectorAll('button')).filter((btn) =>
-            btn.textContent?.includes('停止')
-          ).length;
-          if (running == lastRunning) emptyCheck++;
+          const currentRunning = getRunningCount();
+          if (currentRunning === lastRunning) {
+            emptyCheck++;
+          } else {
+            emptyCheck = 0;
+            lastRunning = currentRunning;
+          }
+          
           if (emptyCheck > 3) break;
         }
       }
-    }
-    await nextClick();
-    if (clickCount > 0) {
-      NotificationService.showSuccess(`成功启动 ${clickCount} 个翻译器`);
-    } else {
-      NotificationService.showWarning('未找到可启动的翻译器');
-    }
-  },
-};
+    },
+  };
 
 export default LaunchTranslator;

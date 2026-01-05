@@ -30,7 +30,7 @@ const ModuleList: Component = () => {
 
   const domainAllowed = () => {
      const h = window.location.hostname;
-     return h === 'books.fishhawk.top' || h === 'books1.fishhawk.top' || h === 'n.novelia.cc';
+     return h === 'n.novelia.cc';
   }
 
   return (
