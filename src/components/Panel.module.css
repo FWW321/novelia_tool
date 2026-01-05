@@ -1,0 +1,51 @@
+.panel {
+  position: fixed;
+  z-index: 9999;
+  background: #1E1E1E;
+  color: #BBB;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+  width: 320px;
+  box-shadow: 2px 2px 12px rgba(0,0,0,0.5);
+  border: 1px solid #333;
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.panel.minimized {
+  width: 200px;
+  height: auto;
+}
+
+.titleBar {
+  font-weight: bold;
+  padding: 10px;
+  cursor: move;
+  background: #292929;
+  border-radius: 6px;
+  color: #CCC;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggleBtn {
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.body {
+  padding-top: 8px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #888;
+  margin-top: 8px;
+  padding: 0 4px;
+}

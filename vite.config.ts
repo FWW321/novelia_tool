@@ -1,0 +1,23 @@
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
+import monkey from 'vite-plugin-monkey';
+
+export default defineConfig({
+  plugins: [
+    solidPlugin(),
+    monkey({
+      entry: 'src/index.tsx',
+      userscript: {
+        name: 'novelia tool',
+        icon: 'data:image/svg+xml;base64,PHN2ZyB2ZXJzaW9uPSIxLjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjUxMi4wMDAwMDBwdCIgaGVpZ2h0PSI1MTIuMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA1MTIuMDAwMDAwIDUxMi4wMDAwMDAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIG1lZXQiPjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAuMDAwMDAwLDUxMi4wMDAwMDApIHNjYWxlKDAuMTAwMDAwLC0wLjEwMDAwMCkiIHN0cm9rZT0ibm9uZSIgZmlsbD0iIzYzRTJCNyI+PHBhdGggZD0iTTE0MzggNDU2NiBjLTY1IC0zNCAtMTIwIC02NCAtMTIzIC02NyAtMiAtMyA5NiAtMTk5IDIxOSAtNDM1IGwyMjQgLTQyOSAtNjE0IC0zIC02MTQgLTIgMCAtNDAwIDAgLTQwMCAtMTg1IDAgLTE4NSAwIDAgLTc1MCAwIC03NTAgMTg1IDAgMTg1IDAgMCAtNDAwIDAgLTQwMCAyMDMwIDAgMjAzMCAwIDAgNDAwIDAgNDAwIDE4NSAwIDE4NSAwIDAgNzUwIDAgNzUwIC0xODUgMCAtMTg1IDAgLTIgMzk4IC0zIDM5NyAtNjE0IDMgYy01MzQgMiAtNjEyIDQgLTYwNyAxNyAzIDggMTA0IDIwNCAyMjUgNDM1IGwyMTkgNDIwIC0xMjQgNjQgLTEyNCA2MyAtMTkgLTMxIGMtMTAgLTE3IC0xMjggLTI0MSAtMjYxIC00OTkgbC0yNDMgLTQ2NyAtNDgxIDIgLTQ4MSAzIC0yNDUgNDcwIGMtMTM1IDI1OSAtMjUyIDQ4MiAtMjYwIDQ5NyBsLTE1IDI3IC0xMTcgLTYzeiBtMzQ5IC0xNjY5IGMyMDMgLTEwNiAyMTMgLTM4OCAxOCAtNDk4IC0xODcgLTEwNSAtNDE2IDI5IC00MTQgMjQxIDEgMTE4IDUwIDE5OSAxNTAgMjQ5IDU5IDMwIDcwIDMyIDEzOSAyOSA0MyAtMyA4OSAtMTIgMTA3IC0yMXogbTE3ODkgLTUgYzk4IC01MCAxNjIgLTE2OSAxNTEgLTI3OSAtMjMgLTIyNCAtMjkyIC0zMzAgLTQ2MSAtMTgyIC02MiA1NSAtODggMTA4IC05NCAxOTIgLTggMTE5IDQ0IDIxMyAxNTAgMjY3IDU4IDI5IDY5IDMxIDEzOCAyNyA1MCAtMiA4OSAtMTEgMTE2IC0yNXogbS0xMjYgLTEzNzIgbDAgLTI4MCAtODkwIDAgLTg5MCAwIDAgMjgwIDAgMjgwIDg5MCAwIDg5MCAwIDAgLTI4MHoiPjwvcGF0aD48L2c+PC9zdmc+',
+        namespace: 'http://tampermonkey.net/',
+        match: [
+          'https://n.novelia.cc/*',
+        ],
+        grant: ['GM_openInTab'],
+        author: 'FWW',
+        description: 'ToolBox for Novel Translate bot website',
+      },
+    }),
+  ],
+});

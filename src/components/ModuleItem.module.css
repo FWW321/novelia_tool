@@ -1,0 +1,36 @@
+.container {
+  margin-bottom: 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #2E2E2E;
+  padding: 6px 8px;
+  border-radius: 3px 3px 0 0;
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.header:hover {
+  background: #3a3a3a;
+}
+
+.header.active {
+  background: #63E2B7 !important;
+  color: #fff !important;
+}
+
+.icon {
+  margin-left: 8px;
+}
+
+.settings {
+  padding: 6px;
+  background: #1C1C1C;
+  border-top: 1px solid #333;
+}

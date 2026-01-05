@@ -1,0 +1,52 @@
+.row {
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.label {
+  display: inline-block;
+  min-width: 70px;
+  color: #ccc;
+  margin-right: 8px;
+  font-size: 13px;
+}
+
+.textInput {
+  width: 120px;
+  padding: 4px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2A2A2A;
+  color: #FFF;
+}
+
+.numberInput {
+  width: 60px;
+  padding: 4px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2A2A2A;
+  color: #FFF;
+}
+
+.select {
+    padding: 4px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2A2A2A;
+    color: #FFF;
+}
+
+.bindButton {
+  padding: 4px 8px;
+  border: 1px solid #555;
+  border-radius: 4px;
+  background: #2A2A2A;
+  color: #FFF;
+  cursor: pointer;
+}
+
+.bindButton:hover {
+    background: #333;
+}
