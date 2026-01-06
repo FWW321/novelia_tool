@@ -61,6 +61,7 @@ const App: Component = () => {
 
     // URL Change Detection (Event-driven)
     const handleUrlChange = () => {
+      setUi('currentPath', window.location.pathname);
       StorageService.update();
     };
 

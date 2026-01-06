@@ -2,7 +2,7 @@
   background: var(--ntr-bg-item);
   border: 1px solid transparent;
   border-radius: 10px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
   overflow: hidden;
 }
 
@@ -165,10 +165,10 @@
 }
 
 .settingsContent {
+  min-height: 0;
   overflow: hidden;
-  padding: 0 12px;
 }
 
-.isOpen .settingsContent {
+.settingsInner {
   padding: 10px 12px;
 }

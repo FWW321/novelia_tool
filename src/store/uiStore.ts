@@ -2,6 +2,7 @@ import { createStore } from 'solid-js/store';
 
 interface UIState {
   visible: boolean;
+  currentPath: string;
   pos: {
     x: number;
     y: number;
@@ -13,6 +14,7 @@ const STORAGE_KEY = 'ntr-toolbox-ui-state';
 const loadState = (): UIState => {
   const defaultState: UIState = {
     visible: true,
+    currentPath: window.location.pathname,
     pos: { x: 20, y: 70 }
   };
 

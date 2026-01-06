@@ -85,14 +85,16 @@ const ModuleItem: Component<Props> = (props) => {
 
       <div class={styles.settingsGrid} classList={{ [styles.isOpen]: expanded() }}>
         <div class={styles.settingsContent}>
-          <For each={props.module.settings}>
-            {(setting) => (
-              <SettingField 
-                setting={setting} 
-                onUpdate={(val) => onUpdateSetting(setting.id, val)}
-              />
-            )}
-          </For>
+          <div class={styles.settingsInner}>
+            <For each={props.module.settings}>
+              {(setting) => (
+                <SettingField 
+                  setting={setting} 
+                  onUpdate={(val) => onUpdateSetting(setting.id, val)}
+                />
+              )}
+            </For>
+          </div>
         </div>
       </div>
     </div>

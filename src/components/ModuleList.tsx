@@ -1,29 +1,11 @@
-import { Component, For, createSignal, onMount, onCleanup } from 'solid-js';
+import { Component, For, createMemo } from 'solid-js';
 import { config } from '../store/configStore';
+import { ui } from '../store/uiStore';
 import ModuleItem from './ModuleItem';
 import styles from './ModuleList.module.css';
 
 const ModuleList: Component = () => {
-  const [currentPath, setCurrentPath] = createSignal(window.location.pathname);
-
-  onMount(() => {
-    const handleUrlChange = () => setCurrentPath(window.location.pathname);
-    window.addEventListener('popstate', handleUrlChange);
-    
-    const interval = setInterval(() => {
-      if (window.location.pathname !== currentPath()) {
-        handleUrlChange();
-      }
-    }, 500);
-
-    onCleanup(() => {
-      window.removeEventListener('popstate', handleUrlChange);
-      clearInterval(interval);
-    });
-  });
-
-  const isAllowed = (whitelist: string | string[]) => {
-    const path = currentPath();
+  const isAllowed = (path: string, whitelist: string | string[]) => {
     const list = Array.isArray(whitelist) ? whitelist : [whitelist];
     return list.some((p) => {
       if (p.endsWith('/*')) {
@@ -34,10 +16,11 @@ const ModuleList: Component = () => {
     });
   };
 
-  const visibleModules = () => {
+  const visibleModules = createMemo(() => {
     if (window.location.hostname !== 'n.novelia.cc') return [];
-    return config.modules.filter((mod) => isAllowed(mod.whitelist));
-  };
+    const path = ui.currentPath;
+    return config.modules.filter((mod) => isAllowed(path, mod.whitelist));
+  });
 
   return (
     <div class={styles.list}>
