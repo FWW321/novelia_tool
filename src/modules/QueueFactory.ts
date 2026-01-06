@@ -112,22 +112,106 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
 
         } else if (type === 'favorite-web') {
              const url = new URL(window.location.href);
-             const id = url.pathname.endsWith('/web') ? 'default' : url.pathname.split('/').pop();
-             const apiUrl = `${url.origin}/api/user/favored-web/${id}?page=0&pageSize=90&sort=update`;
+             const pathParts = url.pathname.split('/').filter(p => p);
+             const id = pathParts.length > 2 ? pathParts[2] : 'default';
              
-             const res = await ApiService.fetchWithAuth(apiUrl, r18Bypass);
-             const data = await res.json();
-             
-             const novels: NovelItem[] = data.items.map((item: any) => ({
-                 url: `/${item.providerId}/${item.novelId}`,
-                 description: item.titleZh ?? item.titleJp,
-                 total: item.total,
-                 done: Math.max(item.gpt || 0, item.sakura || 0)
-             }));
+             let page = 0;
+             const allNovels: NovelItem[] = [];
 
-             results = splitMode === '智能'
-                ? await QueueUtils.assignTasksSmart(novels, smartJobLimit, smartChapterLimit, translateMode)
-                : await QueueUtils.assignTasksStatic(novels, staticParts, translateMode);
+             console.log(`[NoveliaTool] Start fetching web favorites, ID: ${id}`);
+
+             while (true) {
+                 const params = new URLSearchParams({
+                     page: page.toString(),
+                     pageSize: '30',
+                     query: '',
+                     provider: 'kakuyomu,syosetu,novelup,hameln,pixiv,alphapolis',
+                     type: '0',
+                     level: '0',
+                     translate: '0',
+                     sort: 'update'
+                 });
+                 const apiUrl = `${window.location.origin}/api/user/favored-web/${id}?${params.toString()}`;
+                 
+                 const res = await ApiService.fetchWithAuth(apiUrl, true);
+                 if (!res.ok) break;
+                 
+                 const data = await res.json();
+                 const items = data.items || [];
+                 if (items.length === 0) break;
+
+                 allNovels.push(...items.map((item: any) => {
+                     const total = Number(item.total) || 0;
+                     // Important: use max of all translators
+                     const done = Math.max(Number(item.gpt) || 0, Number(item.sakura) || 0);
+                     
+                     return {
+                        // Match legacy: web/provider/id
+                        url: `/${item.providerId}/${item.novelId}`,
+                        description: item.titleZh ?? item.titleJp,
+                        total,
+                        done
+                     };
+                 }));
+
+                 if (items.length < 30) break;
+                 page++;
+             }
+
+             console.log(`[NoveliaTool] Web novels fetched: ${allNovels.length}`);
+
+             if (allNovels.length > 0) {
+                 results = splitMode === '智能'
+                    ? await QueueUtils.assignTasksSmart(allNovels, smartJobLimit, smartChapterLimit, translateMode)
+                    : await QueueUtils.assignTasksStatic(allNovels, staticParts, translateMode);
+                 
+                 console.log(`[NoveliaTool] Web tasks assigned: ${results.length}`);
+             }
+        } else if (type === 'favorite-wenku') {
+            const url = new URL(window.location.href);
+            const pathParts = url.pathname.split('/').filter(p => p);
+            const id = pathParts.length > 2 ? pathParts[2] : 'default';
+            
+            let page = 0;
+            console.log(`[NoveliaTool] Start fetching wenku favorites, ID: ${id}`);
+
+            while (true) {
+                const params = new URLSearchParams({
+                    page: page.toString(),
+                    pageSize: '24',
+                    sort: 'update'
+                });
+                const apiUrl = `${window.location.origin}/api/user/favored-wenku/${id}?${params.toString()}`;
+                const res = await ApiService.fetchWithAuth(apiUrl, true);
+                if (!res.ok) break;
+
+                const data = await res.json();
+                const items = data.items || [];
+                if (items.length === 0) break;
+
+                const wenkuIds = items.map((novel: any) => novel.id);
+                await Promise.all(wenkuIds.map(async (wenkuId: string) => {
+                    try {
+                        const wenkuData = await ApiService.fetchWenku(wenkuId, true);
+                        // Some wenku might only have volumeZh or volumeJp
+                        const volumes = wenkuData.volumeJp || wenkuData.volumeZh || [];
+                        const volumeIds = volumes.map((v: any) => v.volumeId);
+                        
+                        volumeIds.forEach((name: string) => {
+                            results.push({
+                                task: QueueUtils.wenkuLinkBuilder(wenkuId, name, translateMode),
+                                description: name
+                            });
+                        });
+                    } catch (e) {
+                        console.error(`[NoveliaTool] Failed to fetch wenku ${wenkuId}`, e);
+                    }
+                }));
+
+                if (items.length < 24) break;
+                page++;
+            }
+            console.log(`[NoveliaTool] Wenku tasks assigned: ${results.length}`);
         } else {
              NotificationService.showWarning('不支持的页面类型');
              return;

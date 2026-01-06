@@ -23,7 +23,7 @@ const App: Component = () => {
       }
 
       if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (window.location.hostname !== 'n.novelia.cc') return;
+      if (window.location.hostname !== 'n.novelia.cc' && window.location.hostname !== 'n.sakura-share.one') return;
 
       const pk = e.key.toLowerCase();
       

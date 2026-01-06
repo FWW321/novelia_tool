@@ -13,6 +13,7 @@ export default defineConfig({
         namespace: 'http://tampermonkey.net/',
         match: [
           'https://n.novelia.cc/*',
+          'https://n.sakura-share.one/*',
         ],
         grant: ['GM_openInTab'],
         author: 'FWW',

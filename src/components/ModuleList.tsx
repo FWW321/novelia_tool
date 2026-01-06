@@ -17,7 +17,7 @@ const ModuleList: Component = () => {
   };
 
   const visibleModules = createMemo(() => {
-    if (window.location.hostname !== 'n.novelia.cc') return [];
+    if (window.location.hostname !== 'n.novelia.cc' && window.location.hostname !== 'n.sakura-share.one') return [];
     const path = ui.currentPath;
     return config.modules.filter((mod) => isAllowed(path, mod.whitelist));
   });
