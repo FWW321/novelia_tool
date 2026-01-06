@@ -9,13 +9,13 @@ const NotificationContainer: Component = () => {
     <div class={styles.container}>
       <For each={notifications}>
         {(item) => (
-          <div class={`${styles.message} ${styles[item.type]}`}>
-            <span class={styles.icon}>
-              {item.type === 'success' && '✅'}
-              {item.type === 'warning' && '⚠️'}
-              {item.type === 'error' && '❌'}
-            </span>
-            {item.message}
+          <div class={`${styles.notification} ${styles[item.type]}`}>
+            <div class={styles.content}>
+              {item.message}
+            </div>
+            <div class={styles.close}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </div>
           </div>
         )}
       </For>

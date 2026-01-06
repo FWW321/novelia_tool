@@ -1,6 +1,7 @@
-import { Component, createSignal, For, Show } from 'solid-js';
+import { Component, createSignal, Show, For } from 'solid-js';
 import { ModuleDefinition } from '../types';
-import { isModuleActive, toggleKeepModule } from '../store/keepStore';
+import { keepState, toggleKeepModule } from '../store/keepStore';
+import { updateModuleSetting } from '../store/configStore';
 import styles from './ModuleItem.module.css';
 import SettingField from './SettingField';
 
@@ -9,51 +10,91 @@ interface Props {
 }
 
 const ModuleItem: Component<Props> = (props) => {
-  const [showSettings, setShowSettings] = createSignal(false);
+  const [expanded, setExpanded] = createSignal(false);
+  
+  const isRunning = () => {
+    return props.module.type === 'keep' && keepState.activeIds.includes(props.module.id);
+  };
 
-  const handleClick = (e: MouseEvent) => {
-    // Check if clicked on settings or setting field
-    if ((e.target as HTMLElement).closest(`.${styles.settings}`)) return;
+  const handleToggle = (e: Event) => {
+    e.stopPropagation();
+    toggleKeepModule(props.module.id);
+  };
 
-    if (e.button === 0 && !e.ctrlKey && !e.altKey && !e.shiftKey) {
-      if (props.module.type === 'onclick') {
-        if (props.module.run) {
-          props.module.run(props.module);
-        }
-      } else if (props.module.type === 'keep') {
-        toggleKeepModule(props.module.id);
-      }
+  const handleRun = (e: MouseEvent) => {
+    e.stopPropagation();
+    if (props.module.run) {
+      props.module.run(props.module);
     }
   };
 
-  const handleContextMenu = (e: MouseEvent) => {
-    e.preventDefault();
-    setShowSettings(!showSettings());
+  const hasSettings = () => {
+    return props.module.settings && props.module.settings.length > 0;
   };
 
-  const isActive = () => props.module.type === 'keep' && isModuleActive(props.module.id);
+  const onUpdateSetting = (settingId: string, value: any) => {
+    updateModuleSetting(props.module.id, settingId, value);
+  };
 
   return (
-    <div class={styles.container}>
-      <div
-        class={`${styles.header} ${isActive() ? styles.active : ''}`}
-        onClick={handleClick}
-        onContextMenu={handleContextMenu}
-      >
-        <span>{props.module.label}</span>
-        <span class={styles.icon}>
-          {props.module.type === 'keep' ? '⇋' : '▶'}
-        </span>
+    <div 
+      class={styles.card} 
+      classList={{ 
+        [styles.active]: expanded(),
+        [styles.running]: isRunning()
+      }}
+    >
+      <div class={styles.mainRow}>
+        <div class={styles.info} onClick={() => setExpanded(!expanded())}>
+          <div class={styles.nameGroup}>
+            <span class={styles.name}>{props.module.label}</span>
+            <Show when={isRunning()}>
+              <span class={styles.pulseDot} title="Running in background" />
+            </Show>
+          </div>
+          <span class={styles.typeTag}>{props.module.type}</span>
+        </div>
+
+        <div class={styles.actions}>
+          <Show when={hasSettings()}>
+            <button 
+              class={styles.iconBtn} 
+              classList={{ [styles.expanded]: expanded() }}
+              onClick={(e) => { e.stopPropagation(); setExpanded(!expanded()); }}
+              title="Settings"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </Show>
+
+          <Show when={props.module.type === 'keep'}>
+            <label class={styles.switch} onClick={e => e.stopPropagation()}>
+              <input type="checkbox" checked={isRunning()} onChange={handleToggle} />
+              <span class={styles.slider} />
+            </label>
+          </Show>
+          
+          <Show when={props.module.type === 'onclick'}>
+            <button class={styles.runBtn} onClick={handleRun}>Run</button>
+          </Show>
+        </div>
       </div>
-      <Show when={showSettings()}>
-        <div class={styles.settings}>
+
+      <div class={styles.settingsGrid} classList={{ [styles.isOpen]: expanded() }}>
+        <div class={styles.settingsContent}>
           <For each={props.module.settings}>
             {(setting) => (
-              <SettingField moduleId={props.module.id} setting={setting} />
+              <SettingField 
+                setting={setting} 
+                onUpdate={(val) => onUpdateSetting(setting.id, val)}
+              />
             )}
           </For>
         </div>
-      </Show>
+      </div>
     </div>
   );
 };

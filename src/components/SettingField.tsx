@@ -1,77 +1,101 @@
-import { Component, createSignal, Show, Switch, Match, For } from 'solid-js';
+import { Component, createSignal, onCleanup, Show } from 'solid-js';
 import { ModuleSetting } from '../types';
-import { updateModuleSetting } from '../store/configStore';
 import styles from './SettingField.module.css';
 
 interface Props {
-  moduleId: string;
   setting: ModuleSetting;
+  onUpdate: (value: any) => void;
 }
 
 const SettingField: Component<Props> = (props) => {
-  const [isBinding, setIsBinding] = createSignal(false);
+  const [isRecording, setIsRecording] = createSignal(false);
 
-  const handleKeyBind = (e: KeyboardEvent) => {
+  const startRecording = () => {
+    setIsRecording(true);
+    window.addEventListener('keydown', handleKeyCapture, true);
+  };
+
+  const stopRecording = () => {
+    setIsRecording(false);
+    window.removeEventListener('keydown', handleKeyCapture, true);
+  };
+
+  const handleKeyCapture = (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // 如果按下 Esc，则清除绑定 (设为 none)
     if (e.key === 'Escape') {
-      updateModuleSetting(props.moduleId, props.setting.id, 'none');
-    } else {
-      updateModuleSetting(props.moduleId, props.setting.id, e.key.toLowerCase());
+      props.onUpdate('none');
+      stopRecording();
+      return;
     }
-    setIsBinding(false);
-    document.removeEventListener('keydown', handleKeyBind, true);
+    
+    // 忽略单纯的修饰键
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
+    
+    const key = e.key.toLowerCase();
+    props.onUpdate(key);
+    stopRecording();
   };
 
-  const startBinding = () => {
-    setIsBinding(true);
-    document.addEventListener('keydown', handleKeyBind, true);
-  };
+  onCleanup(() => {
+    window.removeEventListener('keydown', handleKeyCapture, true);
+  });
 
   return (
-    <div class={styles.row}>
-      <label class={styles.label}>{props.setting.label}: </label>
-      <Switch fallback={<span style={{ color: '#999' }}>{String(props.setting.value)}</span>}>
-        <Match when={props.setting.type === 'boolean'}>
-          <input
-            type="checkbox"
-            checked={!!props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.checked)}
-          />
-        </Match>
-        <Match when={props.setting.type === 'number'}>
-          <input
-            type="number"
-            class={styles.numberInput}
-            value={props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, Number(e.currentTarget.value) || 0)}
-          />
-        </Match>
-        <Match when={props.setting.type === 'string'}>
-           <input
-             type="text"
-             class={styles.textInput}
-             value={props.setting.value}
-             onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.value)}
-           />
-        </Match>
-        <Match when={props.setting.type === 'select'}>
-          <select
+    <div class={styles.field}>
+      <label class={styles.label}>{props.setting.label}</label>
+      
+      <div class={styles.control}>
+        {/* Boolean Type */}
+        {props.setting.type === 'boolean' && (
+          <label class={styles.switch}>
+            <input 
+              type="checkbox" 
+              checked={props.setting.value as boolean}
+              onChange={(e) => props.onUpdate(e.currentTarget.checked)}
+            />
+            <span class={styles.slider}></span>
+          </label>
+        )}
+
+        {/* Select Type */}
+        {props.setting.type === 'select' && (
+          <select 
             class={styles.select}
-            value={props.setting.value}
-            onChange={(e) => updateModuleSetting(props.moduleId, props.setting.id, e.currentTarget.value)}
+            value={props.setting.value as string}
+            onChange={(e) => props.onUpdate(e.currentTarget.value)}
           >
-            <For each={props.setting.options}>
-              {(opt) => <option value={opt}>{opt}</option>}
-            </For>
+            {props.setting.options?.map(opt => {
+              const label = typeof opt === 'string' ? opt : (opt as any).label;
+              const value = typeof opt === 'string' ? opt : (opt as any).value;
+              return <option value={value}>{label}</option>;
+            })}
           </select>
-        </Match>
-        <Match when={props.setting.type === 'keybind'}>
-          <button class={styles.bindButton} onClick={startBinding}>
-            {isBinding() ? '(Press any key)' : props.setting.value === 'none' ? '(None)' : `[${props.setting.value.toUpperCase()}]`}
+        )}
+
+        {/* Keybind Type */}
+        {props.setting.type === 'keybind' && (
+          <button 
+            class={styles.bindBtn} 
+            classList={{ [styles.recording]: isRecording() }}
+            onClick={() => isRecording() ? stopRecording() : startRecording()}
+          >
+            {isRecording() ? 'Press any key...' : (props.setting.value === 'none' ? 'Click to bind' : `Key: ${(props.setting.value as string).toUpperCase()}`)}
           </button>
-        </Match>
-      </Switch>
+        )}
+
+        {/* String & Number Type */}
+        {(props.setting.type === 'string' || props.setting.type === 'number') && (
+          <input 
+            type={props.setting.type === 'string' ? 'text' : 'number'}
+            class={styles.input}
+            value={props.setting.value as string | number}
+            onInput={(e) => props.onUpdate(props.setting.type === 'number' ? Number(e.currentTarget.value) : e.currentTarget.value)}
+          />
+        )}
+      </div>
     </div>
   );
 };

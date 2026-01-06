@@ -1,0 +1,9 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.itemWrapper {
+  animation: ntr-fade-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}

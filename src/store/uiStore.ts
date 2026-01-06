@@ -1,17 +1,43 @@
-import { createSignal } from 'solid-js';
+import { createStore } from 'solid-js/store';
 
-const initialPos = (() => {
+interface UIState {
+  visible: boolean;
+  pos: {
+    x: number;
+    y: number;
+  };
+}
+
+const STORAGE_KEY = 'ntr-toolbox-ui-state';
+
+const loadState = (): UIState => {
+  const defaultState: UIState = {
+    visible: true,
+    pos: { x: 20, y: 70 }
+  };
+
   try {
-    const saved = localStorage.getItem('ntr-panel-position');
-    if (saved) return JSON.parse(saved);
-  } catch (e) {}
-  return { left: '20px', top: '70px' };
-})();
-
-export const [position, setPosition] = createSignal(initialPos);
-export const [isMinimized, setIsMinimized] = createSignal(false);
-
-export const savePosition = (left: string, top: string) => {
-  setPosition({ left, top });
-  localStorage.setItem('ntr-panel-position', JSON.stringify({ left, top }));
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // 简单验证解析结果
+      if (typeof parsed.pos?.x === 'number' && typeof parsed.pos?.y === 'number') {
+        return { ...defaultState, ...parsed };
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load UI state', e);
+  }
+  return defaultState;
 };
+
+const [ui, setUiInternal] = createStore<UIState>(loadState());
+
+// 封装 setUi 以便自动保存
+export const setUi: typeof setUiInternal = (...args: any[]) => {
+  // @ts-ignore
+  setUiInternal(...args);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(ui));
+};
+
+export { ui };

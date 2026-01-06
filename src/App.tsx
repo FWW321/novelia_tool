@@ -1,8 +1,11 @@
 import type { Component } from 'solid-js';
 import { onMount, onCleanup } from 'solid-js';
 import Panel from './components/Panel';
+import NotificationContainer from './components/NotificationContainer';
+import FloatingTrigger from './components/FloatingTrigger';
 import { loadConfiguration, config } from './store/configStore';
 import { toggleKeepModule } from './store/keepStore';
+import { setUi } from './store/uiStore';
 import StorageService from './services/StorageService';
 
 import { SettingId } from './constants';
@@ -13,6 +16,12 @@ const App: Component = () => {
     
     // Global Keybindings
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Toggle UI visibility with Alt + T
+      if (e.altKey && e.key.toLowerCase() === 't') {
+        setUi('visible', v => !v);
+        return;
+      }
+
       if (e.ctrlKey || e.altKey || e.metaKey) return;
       if (window.location.hostname !== 'n.novelia.cc') return;
 
@@ -84,7 +93,11 @@ const App: Component = () => {
   });
 
   return (
-    <Panel />
+    <>
+      <Panel />
+      <FloatingTrigger />
+      <NotificationContainer />
+    </>
   );
 };
 

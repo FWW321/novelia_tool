@@ -1,14 +1,9 @@
-/* @refresh reload */
 import { render } from 'solid-js/web';
-
-import './index.css';
 import App from './App';
+import './index.css';
 
-render(
-  () => <App />,
-  (() => {
-    const app = document.createElement('div');
-    document.body.append(app);
-    return app;
-  })(),
-);
+const root = document.createElement('div');
+root.id = 'ntr-toolbox-container';
+document.body.appendChild(root);
+
+render(() => <App />, root);
