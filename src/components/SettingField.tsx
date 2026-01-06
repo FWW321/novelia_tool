@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, onCleanup } from 'solid-js';
 import { ModuleSetting } from '../types';
 import styles from './SettingField.module.css';
 

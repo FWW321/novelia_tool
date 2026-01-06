@@ -24,7 +24,6 @@
   box-sizing: border-box;
 }
 
-/* 滚动条美化 */
 .ntr-scrollbar::-webkit-scrollbar {
   width: 5px;
 }

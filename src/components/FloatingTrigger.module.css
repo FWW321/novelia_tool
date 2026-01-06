@@ -8,7 +8,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--ntr-border);
-  border-radius: 14px; /* 改为更有现代感的圆角矩形 */
+  border-radius: 14px;
   box-shadow: var(--ntr-shadow);
   cursor: pointer;
   display: flex;
@@ -17,7 +17,7 @@
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 999998;
   animation: slideIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-  color: var(--ntr-accent); /* 深翡翠绿 */
+  color: var(--ntr-accent);
 }
 
 .trigger:hover {

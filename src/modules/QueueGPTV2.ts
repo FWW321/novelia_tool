@@ -1,4 +1,3 @@
-import StorageService from '../services/StorageService';
 import { ModuleId } from '../constants';
 import { createQueueModule } from './QueueFactory';
 

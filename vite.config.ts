@@ -17,7 +17,16 @@ export default defineConfig({
         grant: ['GM_openInTab'],
         author: 'FWW',
         description: 'ToolBox for Novel Translate bot website',
-      },
+      }
     }),
   ],
+  build: {
+    minify: true,
+    cssMinify: true,
+    cssCodeSplit: false,
+    sourcemap: false,
+  },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  }
 });

@@ -16,7 +16,7 @@ const AutoRetry: ModuleDefinition = {
     { id: SettingId.MoveToTop, label: '置顶重试任务', type: 'boolean', value: false },
     { id: 'relaunch_enabled', label: '重启翻译器', type: 'boolean', value: true },
   ],
-  run: async (cfg, auto) => {
+  run: async (cfg, _auto) => {
     const val = (id: string) => cfg.settings.find((s) => s.id === id)?.value;
     
     if (!val(SettingId.AutoRetryEnable)) return;

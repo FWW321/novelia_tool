@@ -13,7 +13,7 @@ const LaunchTranslator: ModuleDefinition = {
     { id: SettingId.Exclude, label: '排除', type: 'string', value: '本机,AutoDL' },
     { id: SettingId.Bind, label: 'bind', type: 'keybind', value: 'none' },
   ],
-    run: async (cfg, auto) => {
+    run: async (cfg, _auto) => {
       const val = (id: string) => cfg.settings.find((s) => s.id === id)?.value;
       
       const intervalVal = (cfg.settings.find(s => s.label === '延迟间隔')?.value as number) || 50;
