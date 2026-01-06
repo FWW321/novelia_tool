@@ -69,7 +69,6 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
              const modeMap: Record<string, string> = { '常规': '常规', '过期': '过期', '重翻': '重翻' }; 
              const cnMode = modeMap[mode] || '常规';
              
-             // Click buttons via DOM
              btns.find(b => b.textContent?.includes(cnMode))?.click();
              const targetBtn = options.target === 'gpt' ? '排队GPT' : '排队Sakura';
              btns.find(b => b.textContent?.includes(targetBtn))?.click();
@@ -84,7 +83,7 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
                  url: `/${item.providerId}/${item.novelId}`,
                  description: item.titleZh ?? item.titleJp,
                  total: item.total,
-                 // Match legacy: use max of gpt and sakura as 'done' for normal mode skipping
+
                  done: Math.max(item.gpt || 0, item.sakura || 0)
              }));
 
@@ -100,7 +99,7 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
              if (!match) throw new Error('Regex match failed');
 
              const total = parseInt(match[1]);
-             // Match legacy: use max of gpt and sakura
+
              const done = Math.max(parseInt(match[4]) || 0, parseInt(match[5]) || 0);
              const url = window.location.pathname.split('/novel')[1];
              const title = document.title;
@@ -118,8 +117,6 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
              let page = 0;
              const allNovels: NovelItem[] = [];
 
-             console.log(`[NoveliaTool] Start fetching web favorites, ID: ${id}`);
-
              while (true) {
                  const params = new URLSearchParams({
                      page: page.toString(),
@@ -131,41 +128,29 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
                      translate: '0',
                      sort: 'update'
                  });
-                 const apiUrl = `${window.location.origin}/api/user/favored-web/${id}?${params.toString()}`;
                  
-                 const res = await ApiService.fetchWithAuth(apiUrl, true);
+                 const res = await ApiService.fetchWithAuth(`${window.location.origin}/api/user/favored-web/${id}?${params.toString()}`, true);
                  if (!res.ok) break;
                  
                  const data = await res.json();
                  const items = data.items || [];
                  if (items.length === 0) break;
 
-                 allNovels.push(...items.map((item: any) => {
-                     const total = Number(item.total) || 0;
-                     // Important: use max of all translators
-                     const done = Math.max(Number(item.gpt) || 0, Number(item.sakura) || 0);
-                     
-                     return {
-                        // Match legacy: web/provider/id
-                        url: `/${item.providerId}/${item.novelId}`,
-                        description: item.titleZh ?? item.titleJp,
-                        total,
-                        done
-                     };
-                 }));
+                 allNovels.push(...items.map((item: any) => ({
+                     url: `/${item.providerId}/${item.novelId}`,
+                     description: item.titleZh ?? item.titleJp,
+                     total: Number(item.total) || 0,
+                     done: Math.max(Number(item.gpt) || 0, Number(item.sakura) || 0)
+                 })));
 
                  if (items.length < 30) break;
                  page++;
              }
 
-             console.log(`[NoveliaTool] Web novels fetched: ${allNovels.length}`);
-
              if (allNovels.length > 0) {
                  results = splitMode === '智能'
                     ? await QueueUtils.assignTasksSmart(allNovels, smartJobLimit, smartChapterLimit, translateMode)
                     : await QueueUtils.assignTasksStatic(allNovels, staticParts, translateMode);
-                 
-                 console.log(`[NoveliaTool] Web tasks assigned: ${results.length}`);
              }
         } else if (type === 'favorite-wenku') {
             const url = new URL(window.location.href);
@@ -173,16 +158,8 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
             const id = pathParts.length > 2 ? pathParts[2] : 'default';
             
             let page = 0;
-            console.log(`[NoveliaTool] Start fetching wenku favorites, ID: ${id}`);
-
             while (true) {
-                const params = new URLSearchParams({
-                    page: page.toString(),
-                    pageSize: '24',
-                    sort: 'update'
-                });
-                const apiUrl = `${window.location.origin}/api/user/favored-wenku/${id}?${params.toString()}`;
-                const res = await ApiService.fetchWithAuth(apiUrl, true);
+                const res = await ApiService.fetchWithAuth(`${window.location.origin}/api/user/favored-wenku/${id}?page=${page}&pageSize=24&sort=update`, true);
                 if (!res.ok) break;
 
                 const data = await res.json();
@@ -193,25 +170,21 @@ export const createQueueModule = (options: QueueFactoryOptions): ModuleDefinitio
                 await Promise.all(wenkuIds.map(async (wenkuId: string) => {
                     try {
                         const wenkuData = await ApiService.fetchWenku(wenkuId, true);
-                        // Some wenku might only have volumeZh or volumeJp
                         const volumes = wenkuData.volumeJp || wenkuData.volumeZh || [];
-                        const volumeIds = volumes.map((v: any) => v.volumeId);
-                        
-                        volumeIds.forEach((name: string) => {
+                        volumes.forEach((v: any) => {
                             results.push({
-                                task: QueueUtils.wenkuLinkBuilder(wenkuId, name, translateMode),
-                                description: name
+                                task: QueueUtils.wenkuLinkBuilder(wenkuId, v.volumeId, translateMode),
+                                description: v.volumeId
                             });
                         });
                     } catch (e) {
-                        console.error(`[NoveliaTool] Failed to fetch wenku ${wenkuId}`, e);
+                        console.error(`Failed to fetch wenku ${wenkuId}`, e);
                     }
                 }));
 
                 if (items.length < 24) break;
                 page++;
             }
-            console.log(`[NoveliaTool] Wenku tasks assigned: ${results.length}`);
         } else {
              NotificationService.showWarning('不支持的页面类型');
              return;
